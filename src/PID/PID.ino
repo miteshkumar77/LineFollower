@@ -3,13 +3,13 @@
 #define LTML A2
 #define LTL analogRead(A1) <= 100
 
-#define FW_L 8
-#define BW_L 7
-#define EN_L 5
+#define FW_L 7
+#define BW_L 8
+#define EN_L 3
 
-#define FW_R 9
-#define BW_R 11
-#define EN_R 6
+#define FW_R 12
+#define BW_R 13
+#define EN_R 11
 
 
 #define carSlow 80
@@ -124,12 +124,12 @@ void loop() {
 // ln("%d %d %d %d", analogRead(A1), analogRead(A2), analogRead(A0), analogRead(A3));
 //  Serial.print(analogRead(A1)); Serial.print(' '); Serial.print(analogRead(A2)); Serial.print(' '); Serial.print(analogRead(A0)); Serial.print(' '); Serial.print(analogRead(A3)); Serial.print(' '); Serial.print(analogRead(A4)); Serial.print(' '); Serial.print(analogRead(A5)); Serial.println("");
 
-  unsigned int s1 = analogRead(A1);
-  unsigned int s2 = analogRead(A2);
-  unsigned int s3 = analogRead(A0);
-  unsigned int s4 = analogRead(A3);
-  unsigned int s5 = analogRead(A4);
-  unsigned int s6 = analogRead(A5);
+  unsigned int s1 = analogRead(A5);
+  unsigned int s2 = analogRead(A4);
+  unsigned int s3 = analogRead(A3);
+  unsigned int s4 = analogRead(A2);
+  unsigned int s5 = analogRead(A1);
+  unsigned int s6 = analogRead(A0);
 
   unsigned int k1 = s1;
   unsigned int k2 = s2;
