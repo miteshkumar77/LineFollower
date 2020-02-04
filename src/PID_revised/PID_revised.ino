@@ -3,15 +3,20 @@
 #define BW_L 8
 #define EN_L 3
 
+
+#define MAX_SPEED 100
 #define FW_R 12
 #define BW_R 13
 #define EN_R 11
 
-#define k_recover .2
-#define kp 5
-#define kd 10
+#define k_recover .4 // .4
+#define kp 10
+#define kd 32
 #define ki 0
-#define carSlow 80
+#define carSlow 100
+#define scale_adj_high 100
+#define scale_adj_low 100
+int adj;
 
 int rightSpeed = 0;
 int leftSpeed = 0;
@@ -50,27 +55,27 @@ void setup() {
 }
 
 void setRM(int s) {
-	analogWrite(EN_R, min(abs(s), 140));
+	analogWrite(EN_R, min(abs(s), MAX_SPEED));
 	if (s >= 0) {
 		digitalWrite(FW_R, HIGH);
 		digitalWrite(BW_R, LOW);
-		rightSpeed = min(s, 140);
+		rightSpeed = min(s, MAX_SPEED);
 	} else {
-		rightSpeed = max(-140, s);
+		rightSpeed = max(-MAX_SPEED, s);
 		digitalWrite(FW_R, LOW);
 		digitalWrite(BW_R, HIGH);
 	}
 }
 
 void setLM(int s) {
-	analogWrite(EN_L, min(abs(s), 140));
+	analogWrite(EN_L, min(abs(s), MAX_SPEED));
 	if (s >= 0) {
-		leftSpeed = min(s, 140);
+		leftSpeed = min(s, MAX_SPEED);
 		digitalWrite(FW_L, HIGH);
 		digitalWrite(BW_L, LOW);
 	} else {
 
-		leftSpeed = max(s, -140);
+		leftSpeed = max(s, -MAX_SPEED);
 		digitalWrite(FW_L, LOW);
 		digitalWrite(BW_L, HIGH);
 
@@ -114,10 +119,10 @@ void print_s_scaled() {
 void calibrate_sensors() {
 	int i = 0;
 	n = 0;
-	setRM(0);
-	setLM(0);
+	setRM(65);
+	setLM(65);
 
-	while(n < 500){
+	while(n < 300){
 		read_sensors_calib();
 		for (i = 0; i < 6; i++) {
 			if (s[i] > s_max[i]) {
@@ -130,18 +135,20 @@ void calibrate_sensors() {
 		delay(10);
 		++n; 
 	}
+	setRM(0);
+	setLM(0);
 	delay(3000);
 }
 
 bool check_3() {
 	int j = 0;
-	for (int i = 0; i < 6; ++i) {
+	for (int i = 1; i < 5; ++i) {
 		if (s_scaled[i] > 400) {
 			++j;
 		}
 	}
 
-	return (j >= 5);
+	return (j >= 4);
 }
 
 bool check_white() {
@@ -183,24 +190,29 @@ void loop() {
 
 	if (q > 1) { 	
 		q = 0;
-		// check_white()
 		if (check_white()) {
+		// if (false) {
+			// setLM(0);
+			// setRM(0);
+			// delay(100);
 			unsigned int m = max_arr();
 			setLM( k_recover * (500 - m)*(extreme_l_pos)/abs(extreme_l_pos));
 			setRM( -k_recover * (500 - m)*(extreme_l_pos)/abs(extreme_l_pos));
 		} else {
 		
-			if (l_pos >= 7 || l_pos <= -7) {
+			if (l_pos >= 1000 || l_pos <= -1000) {
 				extreme_l_pos = l_pos;
 			}
-			// check_3()
 			if (check_3()) {
+			// if (false) {
 				setLM(carSlow);
 				setRM(carSlow);
 			} else {
-				setLM(max((carSlow + kp * l_pos + (l_pos - prev_l_pos) * kd - integral * ki), 30)); 
-				setRM(max((carSlow - (kp * l_pos + (l_pos - prev_l_pos) * kd - integral * ki)), 30));
-				integral += l_pos;
+				// adj = -1*(abs(l_pos)/(2500/(2 * scale_adj)) - scale_adj);
+				adj = scale_adj_high - (float)abs(l_pos) * (float)(scale_adj_low + scale_adj_high)/((float)(2500));
+				setLM(max((carSlow + adj + kp * l_pos + (l_pos - prev_l_pos) * kd + integral * ki), 30)); 
+				setRM(max((carSlow + adj - kp * l_pos + (l_pos - prev_l_pos) * kd - integral * ki), 30));
+				// integral += l_pos/1000;
 				prev_l_pos = l_pos;
 			}
 		}
@@ -225,7 +237,7 @@ void loop() {
 		// 	prev_l_pos = l_pos;
 		// }
 
-		Serial.print(leftSpeed); Serial.print(' '); Serial.print(rightSpeed); Serial.print(' '); Serial.print(l_pos); Serial.print(' '); Serial.print(extreme_l_pos); Serial.print(" On white: "); Serial.println(check_white());
+		// Serial.print(leftSpeed); Serial.print(' '); Serial.print(rightSpeed); Serial.print(' '); Serial.print(l_pos); Serial.print(' '); Serial.print(extreme_l_pos); Serial.print(" On white: "); Serial.println(check_white());
 		// print_s_scaled();
 	}
 	// setLM(0);
